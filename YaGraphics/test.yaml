@@ -1,0 +1,61 @@
+﻿Id: main
+X: 0
+Y: 100
+Width: 600
+Height: 400
+Templates:
+- !Rectangle
+  Id: tRect
+  Fill: '#0800eb'
+  Children:
+  - !Rectangle
+    X: 0.5
+    Y: 0.5
+    ReferenceX: 0.5
+    ReferenceY: 0.5
+    ScaleX: .5
+    ScaleY: 1
+    Fill: 'Green'
+    Children:
+    - !Text
+      X: 0
+      Y: 0.5
+      ScaleY: 20
+      Text: "hello\nWorld!"
+Children:
+    - !Templated
+      TemplateName: tRect
+      X: 0
+      Y: 0
+      ScaleX: .5
+      ScaleY: .33
+      Children:
+      - !Text
+        X: 0
+        Y: 0
+        ScaleY: 16
+        Text: Obj1
+    - !Templated
+      TemplateName: tRect
+      X: 0
+      Y: 0.5
+      ScaleX: .5
+      ScaleY: .25
+      Children:
+      - !Text
+        X: 0
+        Y: 0
+        ScaleY: 16
+        Text: Obj2
+    - !Templated
+      TemplateName: tRect
+      X: 0.5
+      Y: 0
+      ScaleX: .5
+      ScaleY: 1
+      Children:
+      - !Text
+        X: 0
+        Y: 0
+        ScaleY: 16
+        Text: Obj3
