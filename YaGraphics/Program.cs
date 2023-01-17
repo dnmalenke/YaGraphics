@@ -24,16 +24,18 @@ namespace YaGraphics
 
             var deserializer = dBuilder.Build();
             string ya = File.ReadAllText(@"C:\Users\dnmal\source\repos\YaGraphics\YaGraphics\test.yaml");
-            FileSystemWatcher fWatch = new FileSystemWatcher(@"C:\Users\dnmal\source\repos\YaGraphics\YaGraphics");
-            fWatch.NotifyFilter = NotifyFilters.Attributes |
-NotifyFilters.CreationTime |
-NotifyFilters.DirectoryName |
-NotifyFilters.FileName |
-NotifyFilters.LastAccess |
-NotifyFilters.LastWrite |
-NotifyFilters.Security |
-NotifyFilters.Size;
-            fWatch.Filter = "test.yaml";
+            FileSystemWatcher fWatch = new(@"C:\Users\dnmal\source\repos\YaGraphics\YaGraphics")
+            {
+                NotifyFilter = NotifyFilters.Attributes |
+                               NotifyFilters.CreationTime |
+                               NotifyFilters.DirectoryName |
+                               NotifyFilters.FileName |
+                               NotifyFilters.LastAccess |
+                               NotifyFilters.LastWrite |
+                               NotifyFilters.Security |
+                               NotifyFilters.Size,
+                Filter = "test.yaml"
+            };
 
             var obj = deserializer.Deserialize<YaObject>(ya);
 
@@ -72,11 +74,13 @@ NotifyFilters.Size;
                     _imgForm!.Invoke(_imgForm.Invalidate);
 
                     GC.Collect();
+                    _imgForm!.Invoke(() => _imgForm.Text = "Success!");
                 }
-                catch { }
+                catch
+                {
+                    _imgForm!.Invoke(() => _imgForm.Text = "Fail.");
+                }
             };
-
-
 
             _bmp = yd.GetBitmap();
 

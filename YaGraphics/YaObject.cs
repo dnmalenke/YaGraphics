@@ -2,33 +2,102 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Serialization;
-using static System.Net.Mime.MediaTypeNames;
+using System.Net.Http.Headers;
 
 namespace YaGraphics
 {
     internal class YaObject
     {
+        /// <summary>
+        /// Used for template names and position references
+        /// </summary>
         public string Id { get; set; } = string.Empty;
+
+        /// <summary>
+        /// X position of object. 0.5 means 50% from the left edge of the parent
+        /// Can also reference other objects for positioning. Ex: 0.1 below obj1
+        /// </summary>
         protected string X { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Y position of object. 0.5 means 50% from the top edge of the parent
+        /// Can also reference other objects for positioning. Ex: 0.1 below obj1
+        /// </summary>
         protected string Y { get; set; } = string.Empty;
-        public string ReferenceX { get; set; } = string.Empty;
-        public string ReferenceY { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Rotation anchor X position
+        /// </summary>
+        public float AnchorX { get; set; }
+
+        /// <summary>
+        /// Rotation anchor Y position
+        /// </summary>
+        public float AnchorY { get; set; }
+
+        /// <summary>
+        /// Width of object in pixels. Used for the main object and template objects
+        /// </summary>
         public int Width { get; set; }
+
+        /// <summary>
+        /// Height of object in pixels. Used for the main object and template objects
+        /// </summary>
         public int Height { get; set; }
+
+        /// <summary>
+        /// X scaling of object. 0.5 means 50% as wide as the parent
+        /// </summary>
         public decimal ScaleX { get; set; }
+
+        /// <summary>
+        /// Y scaling of object. 0.5 means 50% as tall as the parent
+        /// </summary>
         public decimal ScaleY { get; set; }
         public List<YaObject> Templates { get; set; } = new();
         public List<YaObject> Children { get; set; } = new();
 
-        public virtual PointF GetPosition(RectangleF parentRect)
+        private static readonly string[] SKIP_WORDS =
+        {
+            "to",
+            "the",
+            "of"
+        };
+
+        public virtual PointF GetPosition(RectangleF parentRect, Dictionary<string, YaObject> siblings)
         {
             var size = GetSize(parentRect);
-            float x = float.Parse(X) * parentRect.Width - (string.IsNullOrEmpty(ReferenceX) ? 0 : float.Parse(ReferenceX) * size.Width);
-            float y = float.Parse(Y) * parentRect.Height - (string.IsNullOrEmpty(ReferenceX) ? 0 : float.Parse(ReferenceX) * size.Height);
+
+            var splX = X.Split(' ');
+            var splY = Y.Split(' ');
+
+            _ = float.TryParse(splX[0], out float x);
+            _ = float.TryParse(splY[0], out float y);
+
+            if (siblings.Keys.Intersect(SKIP_WORDS).Any())
+            {
+                Console.WriteLine("Warning: object name is a skip word.");
+            }
+
+
+            for (int i = 1; i < splX.Length; i++)
+            {
+                if (SKIP_WORDS.Contains(splX[i]))
+                {
+                    continue;
+                }
+
+                switch (splX[i].ToLower())
+                {
+                    case "left":
+                        break;
+                    case "right":
+                        break;
+                    default:
+                        break;
+                }
+            }
+
 
             return new PointF(x, y);
         }

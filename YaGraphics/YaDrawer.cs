@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace YaGraphics
 {
@@ -15,6 +12,7 @@ namespace YaGraphics
         private Bitmap _bitmap;
 
         private Dictionary<string, YaObject> _templates = new();
+        private Dictionary<string, YaObject> _siblings = new();
 
 
         public YaDrawer(YaObject baseObj)
@@ -60,7 +58,12 @@ namespace YaGraphics
             _base.Draw(_graphics, parentRect);
             foreach (var obj in _base.Children)
             {
-                var pos = obj.GetPosition(parentRect);
+                if (!string.IsNullOrEmpty(obj.Id))
+                {
+                    _siblings.Add(obj.Id, obj);
+                }
+
+                var pos = obj.GetPosition(parentRect, _siblings);
                 var size = obj.GetSize(parentRect);
                 var b = new Bitmap((int)size.Width, (int)size.Height);
 

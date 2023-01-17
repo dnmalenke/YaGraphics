@@ -24,6 +24,7 @@ Templates:
       Text: "hello\nWorld!"
 Children:
     - !Templated
+      Id: tRect0
       TemplateName: tRect
       X: 0
       Y: 0
@@ -38,7 +39,7 @@ Children:
     - !Templated
       TemplateName: tRect
       X: 0
-      Y: 0.5
+      Y: below tRect0
       ScaleX: .5
       ScaleY: .25
       Children:
