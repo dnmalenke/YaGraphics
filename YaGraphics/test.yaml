@@ -11,23 +11,21 @@ Templates:
   - !Rectangle
     X: 0.5
     Y: 0.5
-    ReferenceX: 0.5
-    ReferenceY: 0.5
     ScaleX: .5
-    ScaleY: 1
+    ScaleY: .5
     Fill: 'Green'
     Children:
     - !Text
       X: 0
-      Y: 0.5
+      Y: 0
       ScaleY: 20
       Text: "hello\nWorld!"
 Children:
     - !Templated
       Id: tRect0
       TemplateName: tRect
-      X: 0
-      Y: 0
+      X: 0.5
+      Y: 0.25
       ScaleX: .5
       ScaleY: .33
       Children:
@@ -37,10 +35,11 @@ Children:
         ScaleY: 16
         Text: Obj1
     - !Templated
+      Id: tRect1
       TemplateName: tRect
-      X: 0
-      Y: below tRect0
-      ScaleX: .5
+      X: 10px left of tRect0 
+      Y: 0px above tRect0 
+      ScaleX: .3
       ScaleY: .25
       Children:
       - !Text
@@ -48,15 +47,9 @@ Children:
         Y: 0
         ScaleY: 16
         Text: Obj2
-    - !Templated
-      TemplateName: tRect
-      X: 0.5
-      Y: 0
-      ScaleX: .5
-      ScaleY: 1
-      Children:
-      - !Text
-        X: 0
-        Y: 0
-        ScaleY: 16
-        Text: Obj3
+    - !Rectangle
+      X: middle center tRect1
+      Y: 5px below tRect1
+      Fill: red
+      ScaleX: 0.2
+      ScaleY: 0.1

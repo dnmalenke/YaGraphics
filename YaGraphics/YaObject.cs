@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Net.Http.Headers;
 
 namespace YaGraphics
 {
@@ -57,13 +56,6 @@ namespace YaGraphics
         public List<YaObject> Templates { get; set; } = new();
         public List<YaObject> Children { get; set; } = new();
 
-        private static readonly string[] SKIP_WORDS =
-        {
-            "to",
-            "the",
-            "of"
-        };
-
         public virtual PointF GetPosition(RectangleF parentRect, Dictionary<string, YaObject> siblings)
         {
             var size = GetSize(parentRect);
@@ -71,32 +63,166 @@ namespace YaGraphics
             var splX = X.Split(' ');
             var splY = Y.Split(' ');
 
-            _ = float.TryParse(splX[0], out float x);
-            _ = float.TryParse(splY[0], out float y);
+            bool xPx = false;
+            bool yPx = false;
 
-            if (siblings.Keys.Intersect(SKIP_WORDS).Any())
+            if (splX[0].EndsWith("px"))
             {
-                Console.WriteLine("Warning: object name is a skip word.");
+                splX[0] = splX[0][..^2];
+                xPx = true;
             }
 
-
-            for (int i = 1; i < splX.Length; i++)
+            if (splY[0].EndsWith("px"))
             {
-                if (SKIP_WORDS.Contains(splX[i]))
-                {
-                    continue;
-                }
+                splY[0] = splY[0][..^2];
+                yPx = true;
+            }
 
+            YaObject? foundSibling = null;
+            bool toLeft = false;
+            bool middle = false;
+            bool centered = false;
+            int i = 0;
+
+            if (float.TryParse(splX[0], out float x))
+            {
+                i++;
+            }
+
+            // Process X position
+            for (; i < splX.Length; i++)
+            {
                 switch (splX[i].ToLower())
                 {
+                    case "center":
+                    case "centered":
+                        centered = true;
+                        break;
+                    case "middle":
+                        middle = true;
+                        break;
                     case "left":
+                        toLeft = true;
                         break;
                     case "right":
+                        toLeft = false;
                         break;
                     default:
                         break;
                 }
+
+                if (siblings.ContainsKey(splX[i]))
+                {
+                    foundSibling = siblings[splX[i]];
+                }
             }
+
+            if (!xPx)
+            {
+                x *= parentRect.Width;
+            }
+
+            if (foundSibling != null)
+            {
+                var sibPos = foundSibling.GetPosition(parentRect, siblings);
+                var sibSize = foundSibling.GetSize(parentRect);
+
+                if (toLeft)
+                {
+                    x *= -1;
+                    x -= size.Width;
+                }
+                else
+                {
+                    x += sibSize.Width;
+                }
+
+                x += sibPos.X;
+
+                if (middle)
+                {
+                    x += 0.5f * (toLeft ? sibSize.Width : -sibSize.Width);
+                }
+
+                if (centered)
+                {
+                    x += 0.5f* (toLeft ? size.Width : -size.Width);
+                }
+            }
+
+            foundSibling = null;
+            bool toAbove = false;
+            middle = false;
+            centered = false;
+            i = 0;
+
+            if (float.TryParse(splY[0], out float y))
+            {
+                i++;
+            }
+
+            // Process Y position
+            for (; i < splY.Length; i++)
+            {
+                switch (splY[i].ToLower())
+                {
+                    case "center":
+                    case "centered":
+                        centered = true;
+                        break;
+                    case "middle":
+                        middle = true;
+                        break;
+                    case "above":
+                        toAbove = true;
+                        break;
+                    case "below":
+                        toAbove = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (siblings.ContainsKey(splY[i]))
+                {
+                    foundSibling = siblings[splY[i]];
+                }
+            }
+
+            if (!yPx)
+            {
+                y *= parentRect.Height;
+            }
+
+            if (foundSibling != null)
+            {
+                var sibPos = foundSibling.GetPosition(parentRect, siblings);
+                var sibSize = foundSibling.GetSize(parentRect);
+
+                if (toAbove)
+                {
+                    y *= -1;
+                    y -= size.Height;
+                }
+                else
+                {
+                    y += sibSize.Height;
+                }
+
+                y += sibPos.Y;
+
+                if (middle)
+                {
+                    y+= 0.5f * (toAbove ? sibSize.Height : -sibSize.Height);
+                }
+
+                if(centered)
+                {
+                    y += 0.5f * (toAbove ? size.Height : -size.Height);
+                }
+            }
+
+
 
 
             return new PointF(x, y);

@@ -67,6 +67,11 @@ namespace YaGraphics
                 {
                     obj = deserializer.Deserialize<YaObject>(ya);
 
+                    using (Graphics g = Graphics.FromImage(_bmp!))
+                    {
+                        g.Clear(Color.White);
+                    }
+
                     yd = new(obj, _bmp!, new());
 
                     yd.Draw();
