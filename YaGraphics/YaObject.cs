@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 
 namespace YaGraphics
 {
@@ -53,6 +54,11 @@ namespace YaGraphics
         /// Y scaling of object. 0.5 means 50% as tall as the parent
         /// </summary>
         public decimal ScaleY { get; set; }
+
+        /// <summary>
+        /// Fill color/format of the object
+        /// </summary>
+        public string Fill { get; set; } = string.Empty;
         public List<YaObject> Templates { get; set; } = new();
         public List<YaObject> Children { get; set; } = new();
 
@@ -146,7 +152,7 @@ namespace YaGraphics
 
                 if (centered)
                 {
-                    x += 0.5f* (toLeft ? size.Width : -size.Width);
+                    x += 0.5f * (toLeft ? size.Width : -size.Width);
                 }
             }
 
@@ -213,10 +219,10 @@ namespace YaGraphics
 
                 if (middle)
                 {
-                    y+= 0.5f * (toAbove ? sibSize.Height : -sibSize.Height);
+                    y += 0.5f * (toAbove ? sibSize.Height : -sibSize.Height);
                 }
 
-                if(centered)
+                if (centered)
                 {
                     y += 0.5f * (toAbove ? size.Height : -size.Height);
                 }
@@ -237,17 +243,34 @@ namespace YaGraphics
         {
             return new SizeF((float)ScaleX * parentRect.Width, (float)ScaleY * parentRect.Height);
         }
+
+        public virtual Brush GetFillBrush()
+        {
+            if (Fill.StartsWith("rgb("))
+            {
+                var rgb = Fill.Trim()[4..^1].Split(',').Select(c => int.Parse(c.Trim())).ToList();
+
+                return new SolidBrush(Color.FromArgb(rgb[0], rgb[1], rgb[2]));
+            }
+
+            if (Fill.StartsWith("rgba("))
+            {
+                var rgb = Fill.Trim()[5..^1].Split(',').Select(c => decimal.Parse(c.Trim())).ToList();
+
+                return new SolidBrush(Color.FromArgb((int)(255 * rgb[3]), (int)rgb[0], (int)rgb[1], (int)rgb[2]));
+            }
+
+            return new SolidBrush(ColorTranslator.FromHtml(Fill));
+        }
     }
 
     internal class YaRect : YaObject
     {
-        public string Fill { get; set; } = string.Empty;
-
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             var rec = new Rectangle(0, 0, (int)parentRect.Width, (int)parentRect.Height);
 
-            SolidBrush b = new(ColorTranslator.FromHtml(Fill));
+            Brush b = GetFillBrush();
 
             g.FillRectangle(b, rec);
         }
@@ -281,15 +304,36 @@ namespace YaGraphics
 
         public override SizeF GetSize(RectangleF parentRect)
         {
+            return new SizeF(parentRect.Width, parentRect.Height);
+            
+         
+        }
+
+        public RectangleF GetBounds(RectangleF parentRect)
+        {
+            GraphicsPath textPath = new();
             var ff = new Font(SystemFonts.DefaultFont.FontFamily, (float)ScaleY);
-            return TextRenderer.MeasureText(Text, ff);
+            using (var format = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.NoClip))
+            {
+                format.Alignment = StringAlignment.Center;
+                format.LineAlignment = StringAlignment.Center;
+
+                textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
+            }
+            return textPath.GetBounds(null,Pens.Black);
         }
 
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             GraphicsPath textPath = new();
             var ff = new Font(SystemFonts.DefaultFont.FontFamily, (float)ScaleY);
-            textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, new Point(0, 0), StringFormat.GenericDefault);
+            using (var format = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.NoClip))
+            {
+                format.Alignment = StringAlignment.Center;
+                format.LineAlignment = StringAlignment.Center;
+
+                textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
+            }
 
             g.FillPath(Brushes.Black, textPath);
         }

@@ -56,6 +56,12 @@ namespace YaGraphics
             }
 
             _base.Draw(_graphics, parentRect);
+
+            if (_base is YaText yt)
+            {
+                parentRect = yt.GetBounds(parentRect);
+            }
+
             foreach (var obj in _base.Children)
             {
                 if (!string.IsNullOrEmpty(obj.Id))
@@ -64,14 +70,14 @@ namespace YaGraphics
                 }
 
                 var pos = obj.GetPosition(parentRect, _siblings);
+
                 var size = obj.GetSize(parentRect);
                 var b = new Bitmap((int)size.Width, (int)size.Height);
 
                 YaDrawer drawer = new(obj, b, _templates);
                 drawer.Draw();
 
-                _graphics.DrawImage(b, new Point((int)pos.X, (int)pos.Y));
-
+                _graphics.DrawImage(b, new Point((int)(pos.X + parentRect.X), (int)(pos.Y + parentRect.Y)));
             }
         }
 

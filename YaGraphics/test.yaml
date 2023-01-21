@@ -2,7 +2,7 @@
 X: 0
 Y: 100
 Width: 600
-Height: 400
+Height: 600
 Templates:
 - !Rectangle
   Id: tRect
@@ -21,35 +21,61 @@ Templates:
       ScaleY: 20
       Text: "hello\nWorld!"
 Children:
-    - !Templated
-      Id: tRect0
-      TemplateName: tRect
-      X: 0.5
-      Y: 0.25
-      ScaleX: .5
-      ScaleY: .33
-      Children:
-      - !Text
+    #- !Templated
+    #  Id: tRect0
+    #  TemplateName: tRect
+    #  X: 0
+    #  Y: 0
+    #  ScaleX: .5
+    #  ScaleY: .33
+    #  Children:
+    #  - !Text
+    #    X: 0
+    #    Y: 0
+    #    ScaleY: 16
+    #    Text: Obj1
+    #- !Templated
+    #  Id: tRect1
+    #  TemplateName: tRect
+    #  X: 10px right of tRect0 
+    #  Y: 0px below tRect0 
+    #  ScaleX: .3
+    #  ScaleY: .25
+    #  Children:
+    #  - !Text
+    #    X: 0
+    #    Y: 0
+    #    ScaleY: 16
+    #    Text: Obj2
+    - !Text
         X: 0
         Y: 0
         ScaleY: 16
-        Text: Obj1
-    - !Templated
-      Id: tRect1
-      TemplateName: tRect
-      X: 10px left of tRect0 
-      Y: 0px above tRect0 
-      ScaleX: .3
-      ScaleY: .25
-      Children:
-      - !Text
-        X: 0
-        Y: 0
-        ScaleY: 16
-        Text: Obj2
+        Text: 123456
+        Children:
+        - !Rectangle
+            X: 0
+            Y: 0
+            ScaleX: 1
+            ScaleY: 1
+            Fill: rgba(175, 48, 243, 0.37)
     - !Rectangle
-      X: middle center tRect1
-      Y: 5px below tRect1
-      Fill: red
-      ScaleX: 0.2
-      ScaleY: 0.1
+        X: 0.3
+        Y: 0.3
+        Fill: green 
+        ScaleX: .2
+        ScaleY: .2
+        Children:
+        - !Text
+          X: 0
+          Y: 0
+          ScaleY: 16
+          Text: 000000
+          Children:
+          - !Rectangle
+            X: 0
+            Y: 0
+            ScaleX: 1
+            ScaleY: 1
+            Fill: rgba(175, 48, 243, 0.37)
+        
