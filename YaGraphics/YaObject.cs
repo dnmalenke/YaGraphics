@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using YamlDotNet.Serialization;
 
 namespace YaGraphics
 {
@@ -264,6 +265,15 @@ namespace YaGraphics
         }
     }
 
+    internal class YaImg : YaObject
+    {
+        public override void Draw(Graphics g, RectangleF parentRect)
+        {
+            using var img = Image.FromFile(Fill);
+            g.DrawImage(img, parentRect);
+        }
+    }
+
     internal class YaRect : YaObject
     {
         public override void Draw(Graphics g, RectangleF parentRect)
@@ -305,8 +315,8 @@ namespace YaGraphics
         public override SizeF GetSize(RectangleF parentRect)
         {
             return new SizeF(parentRect.Width, parentRect.Height);
-            
-         
+
+
         }
 
         public RectangleF GetBounds(RectangleF parentRect)
@@ -320,7 +330,7 @@ namespace YaGraphics
 
                 textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
             }
-            return textPath.GetBounds(null,Pens.Black);
+            return textPath.GetBounds(null, Pens.Black);
         }
 
         public override void Draw(Graphics g, RectangleF parentRect)

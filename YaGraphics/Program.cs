@@ -4,6 +4,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using System.Resources.Extensions;
 using System.Text;
+using System.Drawing.Imaging;
 
 namespace YaGraphics
 {
@@ -12,6 +13,7 @@ namespace YaGraphics
         private static Form? _imgForm;
         private static Bitmap? _bmp;
 
+        [STAThread]
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World!");
@@ -20,7 +22,8 @@ namespace YaGraphics
                 .IncludeNonPublicProperties()
                 .WithTagMapping("!Text", typeof(YaText))
                 .WithTagMapping("!Rectangle", typeof(YaRect))
-                .WithTagMapping("!Templated", typeof(YaTemplateObject));
+                .WithTagMapping("!Templated", typeof(YaTemplateObject))
+                .WithTagMapping("!Image", typeof(YaImg));
 
             var deserializer = dBuilder.Build();
             string ya = File.ReadAllText(@"C:\Users\dnmal\source\repos\YaGraphics\YaGraphics\test.yaml");
@@ -80,6 +83,8 @@ namespace YaGraphics
 
                     GC.Collect();
                     _imgForm!.Invoke(() => _imgForm.Text = "Success!");
+
+                    _bmp!.Save(@"C:\users\dnmal\downloads\green_drink_gang_2.jpg", ImageFormat.Jpeg);
                 }
                 catch
                 {
@@ -117,7 +122,7 @@ namespace YaGraphics
         {
             _imgForm = new()
             {
-                TopMost = true
+                //TopMost = true
             };
 
             if (_bmp != null)
