@@ -280,7 +280,7 @@ namespace YaGraphics
         {
             var rec = new Rectangle(0, 0, (int)parentRect.Width, (int)parentRect.Height);
 
-            Brush b = GetFillBrush();
+          using   Brush b = GetFillBrush();
 
             g.FillRectangle(b, rec);
         }
@@ -315,20 +315,24 @@ namespace YaGraphics
         public float X1 { get; set; }
         public float Y1 { get; set; }
 
+        public override SizeF GetSize(RectangleF parentRect)
+        {
+            return new SizeF(parentRect.Width, parentRect.Height);
+        }
+
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             using var p = new Pen(GetFillBrush());
             var size = GetSize(parentRect);
-            g.DrawLine(p, new PointF(X0 * size.Width, Y0 * size.Width), new PointF(X1 * size.Width, Y1 * size.Width));
+            g.DrawLine(p, new PointF(X0 * size.Width, Y0 * size.Height), new PointF(X1 * size.Width, Y1 * size.Height));
         }
     }
 
     internal class YaCircle : YaObject
     {
         public override void Draw(Graphics g, RectangleF parentRect)
-        {
-           // using var p = new Pen(GetFillBrush());
-            g.FillEllipse(GetFillBrush(), parentRect);
+        { using var b = GetFillBrush();
+            g.FillEllipse(b, parentRect);
         }
     }
 

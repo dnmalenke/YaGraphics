@@ -71,4 +71,23 @@ Children:
           Y: 0
           ScaleY: 16
           Text: 000000
+          Children:
+          - !Circle
+            X: 0 
+            Y: 0
+            ScaleX: 1
+            ScaleY: 1
+            Fill: rgba(175, 255, 243, 0.33)
+          - !Line
+            X0: 0
+            Y0: 0
+            X1: 1
+            Y1: 1
+            Fill: red
+          - !Line
+            X0: 1
+            Y0: 0
+            X1: 0
+            Y1: 1
+            Fill: red
         

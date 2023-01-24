@@ -23,6 +23,8 @@ namespace YaGraphics
                 .WithTagMapping("!Text", typeof(YaText))
                 .WithTagMapping("!Rectangle", typeof(YaRect))
                 .WithTagMapping("!Templated", typeof(YaTemplateObject))
+                .WithTagMapping("!Circle", typeof(YaCircle))
+                .WithTagMapping("!Line", typeof(YaLine))
                 .WithTagMapping("!Image", typeof(YaImg));
 
             var deserializer = dBuilder.Build();
@@ -122,7 +124,7 @@ namespace YaGraphics
         {
             _imgForm = new()
             {
-                //TopMost = true
+                TopMost = true
             };
 
             if (_bmp != null)
