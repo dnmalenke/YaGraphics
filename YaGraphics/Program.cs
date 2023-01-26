@@ -5,8 +5,9 @@ using YamlDotNet.Serialization;
 using System.Resources.Extensions;
 using System.Text;
 using System.Drawing.Imaging;
+using YaGraphics.Core;
 
-namespace YaGraphics
+namespace YaGraphics.Dev
 {
     internal class Program
     {
@@ -25,6 +26,7 @@ namespace YaGraphics
                 .WithTagMapping("!Templated", typeof(YaTemplateObject))
                 .WithTagMapping("!Circle", typeof(YaCircle))
                 .WithTagMapping("!Line", typeof(YaLine))
+                .WithTagMapping("!Document", typeof(YaDocument))
                 .WithTagMapping("!Image", typeof(YaImg));
 
             var deserializer = dBuilder.Build();
@@ -42,9 +44,9 @@ namespace YaGraphics
                 Filter = "test.yaml"
             };
 
-            var obj = deserializer.Deserialize<YaObject>(ya);
+            var obj = deserializer.Deserialize<List<YaDocument>>(ya);
 
-            YaDrawer yd = new(obj);
+            YaDrawer yd = new(obj.First(), obj.First().Width, obj.First().Height);
 
             yd.Draw();
 
@@ -70,14 +72,14 @@ namespace YaGraphics
 
                 try
                 {
-                    obj = deserializer.Deserialize<YaObject>(ya);
+                    obj = deserializer.Deserialize<List<YaDocument>>(ya);
 
                     using (Graphics g = Graphics.FromImage(_bmp!))
                     {
                         g.Clear(Color.White);
                     }
 
-                    yd = new(obj, _bmp!, new());
+                    yd = new(obj.First(), _bmp!, new());
 
                     yd.Draw();
 
@@ -86,7 +88,15 @@ namespace YaGraphics
                     GC.Collect();
                     _imgForm!.Invoke(() => _imgForm.Text = "Success!");
 
-                    _bmp!.Save(@"C:\users\dnmal\downloads\green_drink_gang_2.jpg", ImageFormat.Jpeg);
+                    if (!string.IsNullOrEmpty(obj.First().OutputFile))
+                    {
+                        string fp = Path.GetFullPath(obj.First().OutputFile);
+
+                        if (!string.IsNullOrEmpty(Path.GetFileName(obj.First().OutputFile)))
+                        {
+                            _bmp!.Save(fp);
+                        }
+                    }
                 }
                 catch
                 {

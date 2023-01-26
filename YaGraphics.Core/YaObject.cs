@@ -5,9 +5,9 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using YamlDotNet.Serialization;
 
-namespace YaGraphics
+namespace YaGraphics.Core
 {
-    internal class YaObject
+    public class YaObject
     {
         /// <summary>
         /// Used for template names and position references
@@ -26,25 +26,15 @@ namespace YaGraphics
         /// </summary>
         protected string Y { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Rotation anchor X position
-        /// </summary>
-        public float AnchorX { get; set; }
+        ///// <summary>
+        ///// Rotation anchor X position
+        ///// </summary>
+        //public float AnchorX { get; set; }
 
-        /// <summary>
-        /// Rotation anchor Y position
-        /// </summary>
-        public float AnchorY { get; set; }
-
-        /// <summary>
-        /// Width of object in pixels. Used for the main object and template objects
-        /// </summary>
-        public int Width { get; set; }
-
-        /// <summary>
-        /// Height of object in pixels. Used for the main object and template objects
-        /// </summary>
-        public int Height { get; set; }
+        ///// <summary>
+        ///// Rotation anchor Y position
+        ///// </summary>
+        //public float AnchorY { get; set; }
 
         /// <summary>
         /// X scaling of object. 0.5 means 50% as wide as the parent
@@ -60,6 +50,8 @@ namespace YaGraphics
         /// Fill color/format of the object
         /// </summary>
         public string Fill { get; set; } = string.Empty;
+
+        public string Outline { get; set; } = string.Empty;
         public List<YaObject> Templates { get; set; } = new();
         public List<YaObject> Children { get; set; } = new();
 
@@ -242,7 +234,8 @@ namespace YaGraphics
 
         public virtual SizeF GetSize(RectangleF parentRect)
         {
-            return new SizeF((float)ScaleX * parentRect.Width, (float)ScaleY * parentRect.Height);
+            var size = new SizeF((float)ScaleX * parentRect.Width, (float)ScaleY * parentRect.Height);
+            return size;
         }
 
         public virtual Brush GetFillBrush()
@@ -261,32 +254,90 @@ namespace YaGraphics
                 return new SolidBrush(Color.FromArgb((int)(255 * rgb[3]), (int)rgb[0], (int)rgb[1], (int)rgb[2]));
             }
 
-            return new SolidBrush(ColorTranslator.FromHtml(Fill));
+            Color fillColor = Color.Transparent;
+
+            try
+            {
+                fillColor = ColorTranslator.FromHtml(Fill);
+            }
+            catch { }
+
+
+            return new SolidBrush(fillColor);
+        }
+
+        public virtual Pen GetOutlinePen()
+        {
+            string origFill = Fill;
+
+            var penSizeStr = Outline.Split(' ').FirstOrDefault(s => s.EndsWith("px") && float.TryParse(s[..^2], out _));
+            if (penSizeStr != null)
+            {
+                Fill = Outline.Replace(penSizeStr, "");
+            }
+            else
+            {
+                penSizeStr = "1px";
+            }
+
+            var brush = GetFillBrush();
+
+            var size = float.Parse(penSizeStr[..^2]);
+
+            Fill = origFill;
+            var p = new Pen(brush, size);
+            p.Alignment = PenAlignment.Inset;
+            return p;
         }
     }
 
-    internal class YaImg : YaObject
+    public class YaDocument : YaObject
+    {
+        /// <summary>
+        /// Width of object in pixels. Used for the main object and template objects
+        /// </summary>
+        public int Width { get; set; }
+
+        /// <summary>
+        /// Height of object in pixels. Used for the main object and template objects
+        /// </summary>
+        public int Height { get; set; }
+
+        public string OutputFile { get; set; } = string.Empty;
+    }
+
+    public class YaImg : YaObject
     {
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             using var img = Image.FromFile(Fill);
             g.DrawImage(img, parentRect);
+
+            if (!string.IsNullOrEmpty(Outline))
+            {
+                g.DrawRectangle(GetOutlinePen(), parentRect);
+            }
         }
     }
 
-    internal class YaRect : YaObject
+    public class YaRect : YaObject
     {
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             var rec = new Rectangle(0, 0, (int)parentRect.Width, (int)parentRect.Height);
 
-          using   Brush b = GetFillBrush();
+            using Brush b = GetFillBrush();
 
             g.FillRectangle(b, rec);
+
+            if (!string.IsNullOrEmpty(Outline))
+            {
+                g.DrawRectangle(GetOutlinePen(), parentRect);
+            }
         }
     }
 
-    internal class YaTemplateObject : YaObject
+    public class YaTemplateObject : YaObject
     {
         public string TemplateName { get; set; } = string.Empty;
 
@@ -299,16 +350,14 @@ namespace YaGraphics
                 throw new("Provide a template before calling draw");
             }
 
-            Template.Width = (int)parentRect.Width;
-            Template.Height = (int)parentRect.Height;
-            var yd = new YaDrawer(Template);
+            var yd = new YaDrawer(Template, (int)parentRect.Width, (int)parentRect.Height);
             yd.Draw();
 
             g.DrawImage(yd.GetBitmap(), 0, 0);
         }
     }
 
-    internal class YaLine : YaObject
+    public class YaLine : YaObject
     {
         public float X0 { get; set; }
         public float Y0 { get; set; }
@@ -322,23 +371,71 @@ namespace YaGraphics
 
         public override void Draw(Graphics g, RectangleF parentRect)
         {
-            using var p = new Pen(GetFillBrush());
             var size = GetSize(parentRect);
-            g.DrawLine(p, new PointF(X0 * size.Width, Y0 * size.Height), new PointF(X1 * size.Width, Y1 * size.Height));
+
+            if (string.IsNullOrEmpty(Outline))
+            {
+                Outline = Fill;
+            }
+
+            g.DrawLine(GetOutlinePen(), new PointF(X0 * size.Width, Y0 * size.Height), new PointF(X1 * size.Width, Y1 * size.Height));
         }
     }
 
-    internal class YaCircle : YaObject
+    public class YaCircle : YaObject
     {
         public override void Draw(Graphics g, RectangleF parentRect)
-        { using var b = GetFillBrush();
+        {
+            using var b = GetFillBrush();
             g.FillEllipse(b, parentRect);
+
+            if (!string.IsNullOrEmpty(Outline))
+            {
+                g.DrawEllipse(GetOutlinePen(), parentRect);
+            }
         }
     }
 
-    internal class YaText : YaObject
+    public class YaText : YaObject
     {
         public string Text { get; set; } = string.Empty;
+        public string? Alignment { get; set; }
+        public string? LineAlignment { get; set; }
+
+        public static StringAlignment GetStringAlignment(string? alignment)
+        {
+            if (alignment != null)
+            {
+                switch (alignment.ToLower())
+                {
+                    case "left":
+                    case "top":
+                        return StringAlignment.Near;
+                    case "right":
+                    case "bottom":
+                        return StringAlignment.Far;
+                    case "center":
+                    case "middle":
+                        return StringAlignment.Center;
+                }
+            }
+
+            return StringAlignment.Near;
+        }
+
+        public Font GetFont()
+        {
+            return new Font(SystemFonts.DefaultFont.FontFamily, (float)ScaleY);
+        }
+
+        public StringFormat GetFormat()
+        {
+            var format = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.NoClip);
+            format.Alignment = GetStringAlignment(Alignment);
+            format.LineAlignment = GetStringAlignment(LineAlignment);
+
+            return format;
+        }
 
         public override SizeF GetSize(RectangleF parentRect)
         {
@@ -348,30 +445,36 @@ namespace YaGraphics
         public RectangleF GetBounds(RectangleF parentRect)
         {
             GraphicsPath textPath = new();
-            var ff = new Font(SystemFonts.DefaultFont.FontFamily, (float)ScaleY);
-            using (var format = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.NoClip))
-            {
-                format.Alignment = StringAlignment.Center;
-                format.LineAlignment = StringAlignment.Center;
+            var ff = GetFont();
 
-                textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
-            }
+            using var format = GetFormat();
+
+            textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
+
             return textPath.GetBounds(null, Pens.Black);
         }
 
         public override void Draw(Graphics g, RectangleF parentRect)
         {
             GraphicsPath textPath = new();
-            var ff = new Font(SystemFonts.DefaultFont.FontFamily, (float)ScaleY);
-            using (var format = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.NoClip))
-            {
-                format.Alignment = StringAlignment.Center;
-                format.LineAlignment = StringAlignment.Center;
+            var ff = GetFont();
 
-                textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
+            using var format = GetFormat();
+
+            textPath.AddString(Text, ff.FontFamily, (int)ff.Style, ff.Size, parentRect, format);
+            using var b = GetFillBrush();
+
+            if (b is SolidBrush sb && sb.Color.ToArgb() == 0)
+            {
+                sb.Color = Color.Black;
             }
 
-            g.FillPath(Brushes.Black, textPath);
+            g.FillPath(b, textPath);
+
+            if (!string.IsNullOrEmpty(Outline))
+            {
+                g.DrawPath(GetOutlinePen(), textPath);
+            }
         }
     }
 }

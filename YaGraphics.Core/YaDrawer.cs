@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 
-namespace YaGraphics
+namespace YaGraphics.Core
 {
-    internal class YaDrawer
+    public class YaDrawer
     {
         private YaObject _base;
         private Graphics _graphics;
@@ -14,13 +16,12 @@ namespace YaGraphics
         private Dictionary<string, YaObject> _templates = new();
         private Dictionary<string, YaObject> _siblings = new();
 
-
-        public YaDrawer(YaObject baseObj)
+        public YaDrawer(YaObject baseObj, int width, int height)
         {
             _base = baseObj;
-            _bitmap = new(_base.Width, _base.Height);
+            _bitmap = new(width, height);
             _graphics = Graphics.FromImage(_bitmap);
-            _graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            _graphics.SmoothingMode = SmoothingMode.HighQuality;
 
             foreach (var item in _base.Templates)
             {
@@ -33,7 +34,7 @@ namespace YaGraphics
             _base = baseObj;
             _bitmap = b;
             _graphics = Graphics.FromImage(_bitmap);
-            _graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            _graphics.SmoothingMode = SmoothingMode.HighQuality;
 
             foreach (var item in _base.Templates)
             {
@@ -72,6 +73,7 @@ namespace YaGraphics
                 var pos = obj.GetPosition(parentRect, _siblings);
 
                 var size = obj.GetSize(parentRect);
+
                 var b = new Bitmap((int)size.Width, (int)size.Height);
 
                 YaDrawer drawer = new(obj, b, _templates);
